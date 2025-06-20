@@ -69,6 +69,46 @@ contract TokenERC721 is
     bytes32 private constant MODULE_TYPE = bytes32("TokenERC721");
     uint256 private constant VERSION = 1;
 
+    // SILICON SPECIFIC STORAGE
+    // === NEW STORAGE (must be appended at the **end** of the layout) ========
+    mapping(uint256 => bool) private _active; // tokenId ⇒ active flag
+
+    // This is a placeholder initializer for the new contract.
+    // In an upgrade, it won't be called. For a new deployment, you would call this.
+    function initializeIsActive() public initializer {
+        __ERC721Enumerable_init();
+        __Ownable_init(msg.sender);
+    }
+
+    // ----------------------------------------------------------------------
+    // External view – query active state.
+    // ----------------------------------------------------------------------
+    function isActive(uint256 tokenId) external view returns (bool) {
+        return _active[tokenId];
+    }
+
+    // ----------------------------------------------------------------------
+    // Admin-only setter. Uses `onlyOwner` from OwnableUpgradeable.
+    // ----------------------------------------------------------------------
+    function setIsActive(uint256 tokenId, bool value) external onlyOwner {
+        _active[tokenId] = value;
+    }
+
+    // ----------------------------------------------------------------------
+    // ERC-165 support table – advertise the new interface plus everything the
+    // parent contracts already expose.
+    // ----------------------------------------------------------------------
+    function supportsInterface(bytes4 interfaceId)
+        public
+        view
+        virtual
+        override(ERC721EnumerableUpgradeable)
+        returns (bool)
+    {
+        return interfaceId == type(IActiveAwareNFT).interfaceId || super.supportsInterface(interfaceId);
+    }
+
+
     address public constant DEFAULT_FEE_RECIPIENT = 0x1Af20C6B23373350aD464700B5965CE4B0D2aD94;
     uint16 private constant DEFAULT_FEE_BPS = 100;
 
